@@ -1,4 +1,5 @@
-Copyright (c) 2018 Maxim Bobachenko  Contacts: <max@bobachenko.org>
+/*
+Copyright (c) 2018 Maxim Bobachenko Contacts: <max@bobachenko.org>
  
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the
@@ -18,3 +19,17 @@ Copyright (c) 2018 Maxim Bobachenko  Contacts: <max@bobachenko.org>
  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
+*/
+
+package org.bobachenko.easyjdbc.mapper;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+/**
+ *
+ * @author Maxim Bobachenko
+ */
+@FunctionalInterface
+public interface KeyMapper<T> extends ResultMapper<T> {
+}
