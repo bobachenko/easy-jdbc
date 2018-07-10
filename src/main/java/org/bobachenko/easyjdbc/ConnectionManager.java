@@ -22,34 +22,24 @@ Copyright (c) 2018 Maxim Bobachenko Contacts: <max@bobachenko.org>
 */
 package org.bobachenko.easyjdbc;
 
-import org.bobachenko.easyjdbc.mapper.KeyMapper;
-import org.bobachenko.easyjdbc.mapper.RowMapper;
-
-import javax.sql.DataSource;
 import java.sql.Connection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.sql.SQLException;
 
 /**
- * Interface to use JDBC easily.
- *
- * @author Maxim Bobachenko
+ * Interface encapsulates real SqlConnection for connection management in different ways.
  */
-public interface EasyJdbc {
+interface ConnectionManager {
+    /**
+     * Provides connection
+     * @return connection
+     * @throws SQLException
+     */
+    Connection getConnection() throws SQLException;
 
-    static EasyJdbcImpl of(DataSource dataSource) {
-        return new EasyJdbcImpl(new DataSourceConnectionManager(dataSource));
-    }
-    static EasyJdbcImpl of(Connection connection) {
-        return new EasyJdbcImpl( new ExternalConnectionManager(connection));
-    }
-
-    <T> Optional<T> queryScalar(String sql, Class<T> typeOfReturnValue, Object... params);
-    <T> Optional<T> queryObject(String sql, RowMapper<T> mapper, Object... params);
-    <T> List<Map<String, Object>> queryAssoc(String sql, Object... params);
-    <T> List<T> queryList(String sql, RowMapper<T> mapper, Object... params);
-    <T> Optional<T> create(String sql, Class<T> typeOfNotCompositePrimaryKey, Object... params);
-    <T> Optional<T> create(String sql, KeyMapper<T> compositeKeyMapper, Object... params);
-    int update(String sql, Object... params);
+    /**
+     * Method is for close connection
+     * @param connection
+     * @throws SQLException
+     */
+    void closeConnection(Connection connection) throws SQLException;
 }

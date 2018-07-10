@@ -46,35 +46,13 @@ final class EasyJdbcImpl implements EasyJdbc {
     //TODO Maybe it'l be better to use another logger later.
     private Logger logger = Logger.getLogger(EasyJdbc.class.getName());
 
-    private DataSource dataSource;
-    private Connection externalConnection;
+    private final ConnectionManager connectionManager;
 
-    EasyJdbcImpl(DataSource dataSource) {
-        if (dataSource == null)
+    EasyJdbcImpl(ConnectionManager connectionManager) {
+        if (connectionManager == null)
             throw new IllegalStateException("The dataSource parameter cannot be null.");
 
-        this.dataSource = dataSource;
-    }
-
-    EasyJdbcImpl(Connection connection) {
-        if (connection == null)
-            throw new IllegalStateException("The externalConnection parameter cannot be null.");
-
-        try {
-            if (connection.isClosed())
-                throw new IllegalStateException("The externalConnection is already closed.");
-        } catch (SQLException e) {
-            throw new EasySqlException(e.getMessage(), e);
-        }
-
-        this.externalConnection = connection;
-    }
-
-    private Connection getConnection() throws SQLException {
-        if(externalConnection !=null)
-            return externalConnection;
-
-        return dataSource.getConnection();
+        this.connectionManager = connectionManager;
     }
 
     private <T> T exec(Operation<T> operation) {
@@ -82,7 +60,7 @@ final class EasyJdbcImpl implements EasyJdbc {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            connection = getConnection();
+            connection = connectionManager.getConnection();
             return operation.run(connection, stmt, rs);
         } catch (SQLException e) {
             throw new EasySqlException(e.getMessage(), e);
@@ -167,14 +145,14 @@ final class EasyJdbcImpl implements EasyJdbc {
     @Override
     public <T> Optional<T> create(String sql, KeyMapper<T> compositeKeyMapper, Object... params) {
         return exec((con, st, rs) -> {
-            if(con.isReadOnly())
+            if (con.isReadOnly())
                 throw new IllegalStateException("Connection cannot be in read only state when create operation is being called!");
 
             st = prepareStatement(con, sql, true, params);
             st.executeUpdate();
 
             // map key
-            if(compositeKeyMapper!=null) {
+            if (compositeKeyMapper != null) {
                 rs = st.getGeneratedKeys();
                 if (rs != null && rs.next())
                     return Optional.of(compositeKeyMapper.map(rs));
@@ -187,7 +165,7 @@ final class EasyJdbcImpl implements EasyJdbc {
     @Override
     public <T> Optional<T> create(String sql, Class<T> typeOfNotCompositePrimaryKey, Object... params) {
         KeyMapper<T> compositeKeyMapper = null;
-        if(typeOfNotCompositePrimaryKey!=null)
+        if (typeOfNotCompositePrimaryKey != null)
             compositeKeyMapper = rs -> typeOfNotCompositePrimaryKey.cast(rs.getObject(1));
         return create(sql, compositeKeyMapper, params);
     }
@@ -249,17 +227,14 @@ final class EasyJdbcImpl implements EasyJdbc {
             }
         }
 
-
-        if(this.externalConnection == null) {
-            // Close connection only if it's gotten from datasource. Not external connection.
-            if (connection != null) {
-                try {
-                    connection.close();
-                } catch (SQLException e) {
-                    logger.log(Level.WARNING, "Close externalConnection error", e);
-                }
+        if (connection != null) {
+            try {
+                connectionManager.closeConnection(connection);
+            } catch (SQLException e) {
+                logger.log(Level.WARNING, "Close externalConnection error", e);
             }
         }
+
     }
 
     /**
