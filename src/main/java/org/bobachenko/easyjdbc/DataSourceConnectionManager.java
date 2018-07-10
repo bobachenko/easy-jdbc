@@ -22,22 +22,18 @@ Copyright (c) 2018 Maxim Bobachenko Contacts: <max@bobachenko.org>
 */
 package org.bobachenko.easyjdbc;
 
-import org.bobachenko.easyjdbc.exception.EasySqlException;
-
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Connection manager for data source.
- * It keeps connections in concurrent map for multithreading access.
+ * It keeps connections as thread local for multithreading access.
  */
 class DataSourceConnectionManager implements ConnectionManager {
 
     private final DataSource dataSource;
-    private final Map<Connection, Connection> map = new ConcurrentHashMap<>();
+    private final ThreadLocal<Connection> connectionHoler = new ThreadLocal<>();
 
     DataSourceConnectionManager(DataSource dataSource) {
         this.dataSource = dataSource;
@@ -49,7 +45,7 @@ class DataSourceConnectionManager implements ConnectionManager {
     @Override
     public Connection getConnection() throws SQLException {
         Connection connection = dataSource.getConnection();
-        map.put(connection, connection);
+        connectionHoler.set(connection);
         return connection;
     }
 
@@ -57,8 +53,10 @@ class DataSourceConnectionManager implements ConnectionManager {
      * Get connection from map and close it.
      */
     @Override
-    public void closeConnection(Connection connection) throws SQLException {
-        map.remove(connection);
-        connection.close();
+    public void closeConnection() throws SQLException {
+        Connection con = connectionHoler.get();
+        if (con != null)
+            con.close();
+        connectionHoler.remove();
     }
 }

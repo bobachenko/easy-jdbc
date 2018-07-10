@@ -34,7 +34,7 @@ class ExternalConnectionManager implements ConnectionManager {
 
     private Connection connection;
 
-    public ExternalConnectionManager(Connection connection) {
+    ExternalConnectionManager(Connection connection) {
         try {
             if (connection.isClosed())
                 throw new IllegalStateException("The externalConnection is already closed.");
@@ -48,7 +48,7 @@ class ExternalConnectionManager implements ConnectionManager {
      * Just return connection
      */
     @Override
-    public Connection getConnection() throws SQLException {
+    public Connection getConnection() {
         return connection;
     }
 
@@ -56,6 +56,6 @@ class ExternalConnectionManager implements ConnectionManager {
      * This method doesn't do anything, because the connection is being closed by user
      */
     @Override
-    public void closeConnection(Connection connection) throws SQLException {
+    public void closeConnection() {
     }
 }

@@ -30,16 +30,17 @@ import java.sql.SQLException;
  */
 interface ConnectionManager {
     /**
-     * Provides connection
+     * Provides a new connection
+     *
      * @return connection
      * @throws SQLException
      */
     Connection getConnection() throws SQLException;
 
     /**
-     * Method is for close connection
-     * @param connection
+     * Closes connection
+     *
      * @throws SQLException
      */
-    void closeConnection(Connection connection) throws SQLException;
+    void closeConnection() throws SQLException;
 }

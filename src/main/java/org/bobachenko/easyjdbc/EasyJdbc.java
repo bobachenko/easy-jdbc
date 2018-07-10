@@ -37,6 +37,13 @@ import java.util.Optional;
  * @author Maxim Bobachenko
  */
 public interface EasyJdbc {
+    <T> Optional<T> queryScalar(String sql, Class<T> typeOfReturnValue, Object... params);
+    <T> Optional<T> queryObject(String sql, RowMapper<T> mapper, Object... params);
+    List<Map<String, Object>> queryAssoc(String sql, Object... params);
+    <T> List<T> queryList(String sql, RowMapper<T> mapper, Object... params);
+    <T> Optional<T> create(String sql, Class<T> typeOfNotCompositePrimaryKey, Object... params);
+    <T> Optional<T> create(String sql, KeyMapper<T> compositeKeyMapper, Object... params);
+    int update(String sql, Object... params);
 
     static EasyJdbcImpl of(DataSource dataSource) {
         return new EasyJdbcImpl(new DataSourceConnectionManager(dataSource));
@@ -44,12 +51,4 @@ public interface EasyJdbc {
     static EasyJdbcImpl of(Connection connection) {
         return new EasyJdbcImpl( new ExternalConnectionManager(connection));
     }
-
-    <T> Optional<T> queryScalar(String sql, Class<T> typeOfReturnValue, Object... params);
-    <T> Optional<T> queryObject(String sql, RowMapper<T> mapper, Object... params);
-    <T> List<Map<String, Object>> queryAssoc(String sql, Object... params);
-    <T> List<T> queryList(String sql, RowMapper<T> mapper, Object... params);
-    <T> Optional<T> create(String sql, Class<T> typeOfNotCompositePrimaryKey, Object... params);
-    <T> Optional<T> create(String sql, KeyMapper<T> compositeKeyMapper, Object... params);
-    int update(String sql, Object... params);
 }

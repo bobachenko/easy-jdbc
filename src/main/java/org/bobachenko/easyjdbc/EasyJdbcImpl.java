@@ -26,8 +26,6 @@ package org.bobachenko.easyjdbc;
 import org.bobachenko.easyjdbc.exception.EasySqlException;
 import org.bobachenko.easyjdbc.mapper.KeyMapper;
 import org.bobachenko.easyjdbc.mapper.RowMapper;
-
-import javax.sql.DataSource;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.time.Instant;
@@ -56,16 +54,14 @@ final class EasyJdbcImpl implements EasyJdbc {
     }
 
     private <T> T exec(Operation<T> operation) {
-        Connection connection = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            connection = connectionManager.getConnection();
-            return operation.run(connection, stmt, rs);
+            return operation.run(connectionManager.getConnection(), stmt, rs);
         } catch (SQLException e) {
             throw new EasySqlException(e.getMessage(), e);
         } finally {
-            close(connection, stmt, rs);
+            close(stmt, rs);
         }
     }
 
@@ -210,7 +206,7 @@ final class EasyJdbcImpl implements EasyJdbc {
      * Close all JDBC object
      * Because it's a good practice to always close ResultSet and Statement explicitly and not to rely on Connection.close.
      */
-    private void close(Connection connection, Statement statement, ResultSet resultSet) {
+    private void close(Statement statement, ResultSet resultSet) {
         if (resultSet != null) {
             try {
                 resultSet.close();
@@ -227,14 +223,11 @@ final class EasyJdbcImpl implements EasyJdbc {
             }
         }
 
-        if (connection != null) {
-            try {
-                connectionManager.closeConnection(connection);
-            } catch (SQLException e) {
-                logger.log(Level.WARNING, "Close externalConnection error", e);
-            }
+        try {
+            connectionManager.closeConnection();
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Close connection error", e);
         }
-
     }
 
     /**

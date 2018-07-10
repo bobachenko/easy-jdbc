@@ -20,7 +20,6 @@ Copyright (c) 2018 Maxim Bobachenko  Contacts: <max@bobachenko.org>
  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-
 package org.bobachenko.easyjdbc;
 
 import org.junit.jupiter.api.AfterEach;
@@ -46,16 +45,14 @@ class ExternalConnectionEasyJdbcTest extends EasyJdbcTest {
 
     @AfterEach
     void closeConnection() throws SQLException {
-        if(externalConnection!=null)
+        if (externalConnection != null)
             externalConnection.close();
     }
 
     @Test
     void whenCreateInstanceWithClosedConnection_thenIllegalStateExteption() throws SQLException {
         externalConnection.close();
-        Assertions.assertThrows(IllegalStateException.class, () -> {
-            EasyJdbc.of(externalConnection);
-        });
+        Assertions.assertThrows(IllegalStateException.class, () -> EasyJdbc.of(externalConnection));
     }
 
     @Test
@@ -141,7 +138,7 @@ class ExternalConnectionEasyJdbcTest extends EasyJdbcTest {
         Optional<Integer> key = jdbc.create("INSERT INTO PERSON (name, birthday, salary, lastLogin) VALUES (?, ?, ?, ?);",
                 Integer.class, "new name", new Date(), 5555.0, null);
 
-        key.ifPresent(k->jdbc.update("UPDATE PERSON SET name = ?, picture = ? WHERE id = ?", "", new byte[] {0x00}, k));
+        key.ifPresent(k -> jdbc.update("UPDATE PERSON SET name = ?, picture = ? WHERE id = ?", "", new byte[]{0x00}, k));
 
         Optional<Person> person = jdbc.queryObject("SELECT * FROM PERSON WHERE id = ?",
                 Person::map, key.orElse(0));
@@ -154,7 +151,7 @@ class ExternalConnectionEasyJdbcTest extends EasyJdbcTest {
         Optional<Integer> key = jdbc.create("INSERT INTO PERSON (name, birthday, salary, lastLogin) VALUES (?, ?, ?, ?);",
                 Integer.class, "new name", new Date(), 5555.0, null);
 
-        key.ifPresent(k->jdbc.create("UPDATE PERSON SET name = ?, picture = ? WHERE id = ?", (Class)null, "", new byte[] {0x00}, k));
+        key.ifPresent(k -> jdbc.create("UPDATE PERSON SET name = ?, picture = ? WHERE id = ?", (Class) null, "", new byte[]{0x00}, k));
 
         Optional<Person> person = jdbc.queryObject("SELECT * FROM PERSON WHERE id = ?",
                 Person::map, key.orElse(0));
