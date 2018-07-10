@@ -20,36 +20,16 @@ Copyright (c) 2018 Maxim Bobachenko Contacts: <max@bobachenko.org>
  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
+
 package org.bobachenko.easyjdbc;
 
-import org.bobachenko.easyjdbc.mapper.KeyMapper;
-import org.bobachenko.easyjdbc.mapper.RowMapper;
-
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.sql.*;
 
 /**
- * Interface to use JDBC easily.
  *
- * @author Maxim Bobachenko
+ * @param <T>
  */
-public interface EasyJdbc {
-
-    static EasyJdbcImpl of(DataSource dataSource) {
-        return new EasyJdbcImpl(dataSource);
-    }
-    static EasyJdbcImpl of(Connection connection) {
-        return new EasyJdbcImpl(connection);
-    }
-
-    <T> Optional<T> queryScalar(String sql, Class<T> typeOfReturnValue, Object... params);
-    <T> Optional<T> queryObject(String sql, RowMapper<T> mapper, Object... params);
-    <T> List<Map<String, Object>> queryAssoc(String sql, Object... params);
-    <T> List<T> queryList(String sql, RowMapper<T> mapper, Object... params);
-    <T> Optional<T> create(String sql, Class<T> typeOfNotCompositePrimaryKey, Object... params);
-    <T> Optional<T> create(String sql, KeyMapper<T> compositeKeyMapper, Object... params);
-    void update(String sql, Object... params);
+@FunctionalInterface
+interface Operation<T> {
+    T run(Connection connection, PreparedStatement statement, ResultSet resultSet) throws SQLException;
 }

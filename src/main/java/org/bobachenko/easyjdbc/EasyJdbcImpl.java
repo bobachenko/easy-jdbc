@@ -43,38 +43,65 @@ import java.util.logging.Logger;
  */
 final class EasyJdbcImpl implements EasyJdbc {
 
-    //TODO Consider the option to use another logger later.
+    //TODO Maybe it'l be better to use another logger later.
     private Logger logger = Logger.getLogger(EasyJdbc.class.getName());
 
     private DataSource dataSource;
+    private Connection externalConnection;
 
-    public EasyJdbcImpl(DataSource dataSource) {
+    EasyJdbcImpl(DataSource dataSource) {
         if (dataSource == null)
             throw new IllegalStateException("The dataSource parameter cannot be null.");
 
         this.dataSource = dataSource;
     }
 
-    @Override
-    public <T> Optional<T> queryScalar(String sql, Class<T> type, Object... params) {
+    EasyJdbcImpl(Connection connection) {
+        if (connection == null)
+            throw new IllegalStateException("The externalConnection parameter cannot be null.");
+
+        try {
+            if (connection.isClosed())
+                throw new IllegalStateException("The externalConnection is already closed.");
+        } catch (SQLException e) {
+            throw new EasySqlException(e.getMessage(), e);
+        }
+
+        this.externalConnection = connection;
+    }
+
+    private Connection getConnection() throws SQLException {
+        if(externalConnection !=null)
+            return externalConnection;
+
+        return dataSource.getConnection();
+    }
+
+    private <T> T exec(Operation<T> operation) {
         Connection connection = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-
         try {
-            connection = dataSource.getConnection();
-            stmt = prepareStatement(connection, sql, params);
-            rs = stmt.executeQuery();
-
-            if (rs.next())
-                return Optional.of(type.cast(rs.getObject(1)));
+            connection = getConnection();
+            return operation.run(connection, stmt, rs);
         } catch (SQLException e) {
             throw new EasySqlException(e.getMessage(), e);
         } finally {
             close(connection, stmt, rs);
         }
+    }
 
-        return Optional.empty();
+    @Override
+    public <T> Optional<T> queryScalar(String sql, Class<T> type, Object... params) {
+        return exec((con, st, rs) -> {
+            st = prepareStatement(con, sql, params);
+            rs = st.executeQuery();
+
+            if (rs.next())
+                return Optional.of(type.cast(rs.getObject(1)));
+
+            return Optional.empty();
+        });
     }
 
     @Override
@@ -82,41 +109,26 @@ final class EasyJdbcImpl implements EasyJdbc {
         if (mapper == null)
             throw new IllegalArgumentException("RowMapper cannot be null.");
 
-        Connection connection = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-
-        try {
-            connection = dataSource.getConnection();
-            stmt = prepareStatement(connection, sql, params);
-
-            rs = stmt.executeQuery();
+        return exec((con, st, rs) -> {
+            st = prepareStatement(con, sql, params);
+            rs = st.executeQuery();
 
             if (rs.next())
                 return Optional.of(mapper.map(rs, 0));
 
-        } catch (SQLException e) {
-            throw new EasySqlException(e.getMessage(), e);
-        } finally {
-            close(connection, stmt, rs);
-        }
-
-        return Optional.empty();
+            return Optional.empty();
+        });
     }
 
     @Override
     public List<Map<String, Object>> queryAssoc(String sql, Object... params) {
-        List<Map<String, Object>> result = new ArrayList<>();
 
-        Connection connection = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
+        return exec((con, st, rs) -> {
+            List<Map<String, Object>> result = new ArrayList<>();
 
-        try {
-            connection = dataSource.getConnection();
-            stmt = prepareStatement(connection, sql, params);
+            st = prepareStatement(con, sql, params);
 
-            rs = stmt.executeQuery();
+            rs = st.executeQuery();
             ResultSetMetaData metaData = rs.getMetaData();
 
             while (rs.next()) {
@@ -129,13 +141,8 @@ final class EasyJdbcImpl implements EasyJdbc {
                 result.add(record);
             }
 
-        } catch (SQLException e) {
-            throw new EasySqlException(e.getMessage(), e);
-        } finally {
-            close(connection, stmt, rs);
-        }
-
-        return result;
+            return result;
+        });
     }
 
     @Override
@@ -143,29 +150,18 @@ final class EasyJdbcImpl implements EasyJdbc {
         if (mapper == null)
             throw new IllegalArgumentException("RowMapper cannot be null.");
 
-        List<T> result = new ArrayList<>();
+        return exec((con, st, rs) -> {
+            List<T> result = new ArrayList<>();
+            st = prepareStatement(con, sql, params);
 
-        Connection connection = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-
-        try {
-            connection = dataSource.getConnection();
-            stmt = prepareStatement(connection, sql, params);
-
-            rs = stmt.executeQuery();
+            rs = st.executeQuery();
 
             int rowNum = 0;
             while (rs.next())
                 result.add(mapper.map(rs, rowNum++));
 
-        } catch (SQLException e) {
-            throw new EasySqlException(e.getMessage(), e);
-        } finally {
-            close(connection, stmt, rs);
-        }
-
-        return result;
+            return result;
+        });
     }
 
     @Override
@@ -175,47 +171,32 @@ final class EasyJdbcImpl implements EasyJdbc {
 
     @Override
     public <T> Optional<T> create(String sql, KeyMapper<T> compositeKeyMapper, Object... params) {
-        Optional<T> key = Optional.empty();
+        return exec((con, st, rs) -> {
+            if(con.isReadOnly())
+                throw new IllegalStateException("Connection cannot be in read only state when create operation is being called!");
 
-        Connection connection = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-
-        try {
-            connection = dataSource.getConnection();
-            stmt = prepareStatement(connection, sql, true, params);
-
-            stmt.executeUpdate();
+            st = prepareStatement(con, sql, true, params);
+            st.executeUpdate();
 
             // map key
-            rs = stmt.getGeneratedKeys();
+            rs = st.getGeneratedKeys();
             if (rs != null && rs.next())
-                key = Optional.of(compositeKeyMapper.map(rs));
+                return Optional.of(compositeKeyMapper.map(rs));
 
-        } catch (SQLException e) {
-            throw new EasySqlException(e.getMessage(), e);
-        } finally {
-            close(connection, stmt, rs);
-        }
-
-        return key;
+            return Optional.empty();
+        });
     }
 
     @Override
     public void update(String sql, Object... params) {
-        Connection connection = null;
-        PreparedStatement stmt = null;
+        exec((con, st, rs) -> {
+            if (con.isReadOnly())
+                throw new IllegalStateException("Connection cannot be in read only state when create operation is being called!");
 
-        try {
-            connection = dataSource.getConnection();
-            stmt = prepareStatement(connection, sql, params);
-            stmt.executeUpdate();
-
-        } catch (SQLException e) {
-            throw new EasySqlException(e.getMessage(), e);
-        } finally {
-            close(connection, stmt, null);
-        }
+            st = prepareStatement(con, sql, params);
+            st.executeUpdate();
+            return  null;
+        });
     }
 
     /**
@@ -236,7 +217,7 @@ final class EasyJdbcImpl implements EasyJdbc {
     }
 
     /**
-     * Prepare statement and fill parameters. Statement doesn't return key
+     * Prepare statement and fill parameters. Statement doesn't return generated keys
      */
     private PreparedStatement prepareStatement(Connection connection, String sql, Object... params) throws SQLException {
         return prepareStatement(connection, sql, false, params);
@@ -247,26 +228,33 @@ final class EasyJdbcImpl implements EasyJdbc {
      * Because it's a good practice to always close ResultSet and Statement explicitly and not to rely on Connection.close.
      */
     private void close(Connection connection, Statement statement, ResultSet resultSet) {
-        if (resultSet != null)
+        if (resultSet != null) {
             try {
                 resultSet.close();
             } catch (SQLException e) {
                 logger.log(Level.WARNING, "Close result set error", e);
             }
+        }
 
-        if (statement != null)
+        if (statement != null) {
             try {
                 statement.close();
             } catch (SQLException e) {
                 logger.log(Level.WARNING, "Close statement error", e);
             }
+        }
 
-        if (connection != null)
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                logger.log(Level.WARNING, "Close connection error", e);
+
+        if(this.externalConnection == null) {
+            // Close connection only if it's gotten from datasource. Not external connection.
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    logger.log(Level.WARNING, "Close externalConnection error", e);
+                }
             }
+        }
     }
 
     /**
@@ -274,6 +262,7 @@ final class EasyJdbcImpl implements EasyJdbc {
      */
     private void addParameter(int numberOfParam, PreparedStatement statement, Object paramValue) throws SQLException {
 
+        // cast java types to JDBC types
         if (paramValue instanceof Boolean) {
             statement.setBoolean(numberOfParam, (boolean) paramValue);
             return;
@@ -315,6 +304,7 @@ final class EasyJdbcImpl implements EasyJdbc {
             return;
         }
 
+        // If it's another type, we have to rely on JDBC
         statement.setObject(numberOfParam, paramValue);
     }
 }
