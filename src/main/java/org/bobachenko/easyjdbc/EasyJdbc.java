@@ -51,5 +51,5 @@ public interface EasyJdbc {
     <T> List<T> queryList(String sql, RowMapper<T> mapper, Object... params);
     <T> Optional<T> create(String sql, Class<T> typeOfNotCompositePrimaryKey, Object... params);
     <T> Optional<T> create(String sql, KeyMapper<T> compositeKeyMapper, Object... params);
-    void update(String sql, Object... params);
+    int update(String sql, Object... params);
 }

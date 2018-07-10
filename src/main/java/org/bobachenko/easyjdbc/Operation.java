@@ -31,5 +31,5 @@ import java.sql.*;
  */
 @FunctionalInterface
 interface Operation<T> {
-    T run(Connection connection, PreparedStatement statement, ResultSet resultSet) throws SQLException;
+    T run(final Connection connection, final PreparedStatement statement, final ResultSet resultSet) throws SQLException;
 }

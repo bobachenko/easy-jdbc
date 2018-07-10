@@ -165,11 +165,6 @@ final class EasyJdbcImpl implements EasyJdbc {
     }
 
     @Override
-    public <T> Optional<T> create(String sql, Class<T> typeOfNotCompositePrimaryKey, Object... params) {
-        return create(sql, rs -> typeOfNotCompositePrimaryKey.cast(rs.getObject(1)), params);
-    }
-
-    @Override
     public <T> Optional<T> create(String sql, KeyMapper<T> compositeKeyMapper, Object... params) {
         return exec((con, st, rs) -> {
             if(con.isReadOnly())
@@ -179,23 +174,33 @@ final class EasyJdbcImpl implements EasyJdbc {
             st.executeUpdate();
 
             // map key
-            rs = st.getGeneratedKeys();
-            if (rs != null && rs.next())
-                return Optional.of(compositeKeyMapper.map(rs));
+            if(compositeKeyMapper!=null) {
+                rs = st.getGeneratedKeys();
+                if (rs != null && rs.next())
+                    return Optional.of(compositeKeyMapper.map(rs));
+            }
 
             return Optional.empty();
         });
     }
 
     @Override
-    public void update(String sql, Object... params) {
-        exec((con, st, rs) -> {
+    public <T> Optional<T> create(String sql, Class<T> typeOfNotCompositePrimaryKey, Object... params) {
+        KeyMapper<T> compositeKeyMapper = null;
+        if(typeOfNotCompositePrimaryKey!=null)
+            compositeKeyMapper = rs -> typeOfNotCompositePrimaryKey.cast(rs.getObject(1));
+        return create(sql, compositeKeyMapper, params);
+    }
+
+
+    @Override
+    public int update(String sql, Object... params) {
+        return exec((con, st, rs) -> {
             if (con.isReadOnly())
                 throw new IllegalStateException("Connection cannot be in read only state when create operation is being called!");
 
             st = prepareStatement(con, sql, params);
-            st.executeUpdate();
-            return  null;
+            return st.executeUpdate();
         });
     }
 

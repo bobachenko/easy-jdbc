@@ -33,7 +33,7 @@ import java.util.Date;
 /**
  * Base class for h2 tests
  */
-public class Test {
+public class EasyJdbcTest {
     /*
                 simple model
             */
