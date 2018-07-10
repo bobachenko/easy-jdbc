@@ -29,7 +29,7 @@ import org.junit.jupiter.api.BeforeEach;
 import java.sql.SQLException;
 import java.util.*;
 
-class DataSourceEasyJdbcImplTest extends Test {
+class DataSourceEasyJdbcTest extends Test {
 
     @BeforeEach
     @Override
