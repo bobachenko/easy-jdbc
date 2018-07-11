@@ -142,7 +142,8 @@ final class EasyJdbcImpl implements EasyJdbc {
     public <T> Optional<T> create(String sql, KeyMapper<T> compositeKeyMapper, Object... params) {
         return exec((con, st, rs) -> {
             if (con.isReadOnly())
-                throw new IllegalStateException("Connection cannot be in read only state when create operation is being called!");
+                throw new IllegalStateException("Connection cannot be in read only state when" +
+                        " create operation is being called!");
 
             st = prepareStatement(con, sql, true, params);
             st.executeUpdate();
@@ -171,7 +172,8 @@ final class EasyJdbcImpl implements EasyJdbc {
     public int update(String sql, Object... params) {
         return exec((con, st, rs) -> {
             if (con.isReadOnly())
-                throw new IllegalStateException("Connection cannot be in read only state when create operation is being called!");
+                throw new IllegalStateException("Connection cannot be in read only state when " +
+                        "create operation is being called!");
 
             st = prepareStatement(con, sql, params);
             return st.executeUpdate();
@@ -181,7 +183,8 @@ final class EasyJdbcImpl implements EasyJdbc {
     /**
      * Prepare statement and fill parameters
      */
-    private PreparedStatement prepareStatement(Connection connection, String sql, boolean returnKey, Object... params) throws SQLException {
+    private PreparedStatement prepareStatement(Connection connection, String sql,
+                                               boolean returnKey, Object... params) throws SQLException {
         PreparedStatement statement;
         statement = returnKey ? connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS) :
                 connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -198,13 +201,15 @@ final class EasyJdbcImpl implements EasyJdbc {
     /**
      * Prepare statement and fill parameters. Statement doesn't return generated keys
      */
-    private PreparedStatement prepareStatement(Connection connection, String sql, Object... params) throws SQLException {
+    private PreparedStatement prepareStatement(Connection connection, String sql,
+                                               Object... params) throws SQLException {
         return prepareStatement(connection, sql, false, params);
     }
 
     /**
      * Close all JDBC object
-     * Because it's a good practice to always close ResultSet and Statement explicitly and not to rely on Connection.close.
+     * Because it's a good practice to always close ResultSet
+     * and Statement explicitly and not to rely on Connection.close.
      */
     private void close(Statement statement, ResultSet resultSet) {
         if (resultSet != null) {
@@ -233,7 +238,8 @@ final class EasyJdbcImpl implements EasyJdbc {
     /**
      * Add parameter to statement
      */
-    private void addParameter(int numberOfParam, PreparedStatement statement, Object paramValue) throws SQLException {
+    private void addParameter(int numberOfParam, PreparedStatement statement,
+                              Object paramValue) throws SQLException {
 
         // cast java types to JDBC types
         if (paramValue instanceof Boolean) {

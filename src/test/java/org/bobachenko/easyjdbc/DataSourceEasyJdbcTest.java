@@ -32,6 +32,7 @@ import java.util.*;
 
 class DataSourceEasyJdbcTest extends EasyJdbcTest {
 
+
     @BeforeEach
     @Override
     protected void beforeEachTest() throws SQLException {
@@ -42,6 +43,13 @@ class DataSourceEasyJdbcTest extends EasyJdbcTest {
     void queryScalar_thenReturnInt() {
         Optional<Integer> id = jdbc.queryScalar("SELECT id FROM PERSON WHERE name = ?",
                 Integer.class, "Person 1");
+        Assertions.assertTrue(id.isPresent() && id.get() == 1);
+    }
+
+    @Test
+    void queryScalarWithoutParameters_thenReturnInt() {
+        Optional<Integer> id = jdbc.queryScalar("SELECT id FROM PERSON WHERE name = 'Person 1'",
+                Integer.class);
         Assertions.assertTrue(id.isPresent() && id.get() == 1);
     }
 
@@ -122,6 +130,19 @@ class DataSourceEasyJdbcTest extends EasyJdbcTest {
                 Integer.class, "new name", new Date(), 5555.0, null);
 
         key.ifPresent(k->jdbc.update("UPDATE PERSON SET name = ?, picture = ? WHERE id = ?", "", new byte[] {0x00}, k));
+
+        Optional<Person> person = jdbc.queryObject("SELECT * FROM PERSON WHERE id = ?",
+                Person::map, key.orElse(0));
+
+        Assertions.assertTrue(person.isPresent() && person.get().name.equals(""));
+    }
+
+    @Test
+    void updateWithoutParameters() {
+        Optional<Integer> key = jdbc.create("INSERT INTO PERSON (name, birthday, salary, lastLogin) VALUES (?, ?, ?, ?);",
+                Integer.class, "new name", new Date(), 5555.0, null);
+
+        key.ifPresent(k->jdbc.update("UPDATE PERSON SET name = '' WHERE id = " + k));
 
         Optional<Person> person = jdbc.queryObject("SELECT * FROM PERSON WHERE id = ?",
                 Person::map, key.orElse(0));
