@@ -63,6 +63,8 @@ public final class EasyDataSource implements DataSource {
 
     @Override
     public Connection getConnection() throws SQLException {
+        if(username!=null && !username.isEmpty() && password!=null && !password.isEmpty())
+            return DriverManager.getConnection(url, username, password);
         return DriverManager.getConnection(url);
     }
 
