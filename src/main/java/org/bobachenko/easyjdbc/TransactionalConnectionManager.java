@@ -44,6 +44,7 @@ class TransactionalConnectionManager implements ConnectionManager {
 
     TransactionalConnectionManager(DataSource dataSource, IsolationLevel isolationLevel) {
         this.dataSource = dataSource;
+        this.isolationLevel = isolationLevel;
     }
 
     @Override

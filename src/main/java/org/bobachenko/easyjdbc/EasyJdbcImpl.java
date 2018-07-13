@@ -39,7 +39,7 @@ import java.util.logging.Logger;
  *
  * @author Maxim Bobachenko
  */
-final class EasyJdbcImpl implements EasyJdbc {
+public final class EasyJdbcImpl implements EasyJdbc {
 
     //TODO Maybe it'l be better to use another logger later.
     private Logger logger = Logger.getLogger(EasyJdbc.class.getName());

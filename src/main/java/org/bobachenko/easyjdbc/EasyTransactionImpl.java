@@ -30,7 +30,7 @@ import java.util.function.Consumer;
 /**
  * Class for transaction support
  */
-class EasyTransactionImpl implements EasyTransaction {
+public class EasyTransactionImpl implements EasyTransaction {
 
     private TransactionalConnectionManager connectionManager;
 

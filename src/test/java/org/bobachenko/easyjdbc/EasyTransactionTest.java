@@ -44,7 +44,7 @@ class EasyTransactionTest extends EasyJdbcTest {
     void run_thenOk() {
         int[] id = {0};
 
-        EasyTransaction.of(dataSource).run(jdbc -> {
+        EasyTransaction.of(dataSource, IsolationLevel.Serializable).run(jdbc -> {
 
             Optional<Integer> oId =
                     jdbc.create("INSERT INTO PERSON (name, birthday, salary, lastLogin) " +
