@@ -25,6 +25,7 @@ package org.bobachenko.easyjdbc;
 
 import org.bobachenko.easyjdbc.exception.EasySqlException;
 import org.bobachenko.easyjdbc.mapper.KeyMapper;
+import org.bobachenko.easyjdbc.mapper.ResultMapper;
 import org.bobachenko.easyjdbc.mapper.RowMapper;
 import java.math.BigDecimal;
 import java.sql.*;
@@ -41,7 +42,7 @@ import java.util.logging.Logger;
  */
 public final class EasyJdbcImpl implements EasyJdbc {
 
-    //TODO Maybe it'l be better to use another logger later.
+    //TODO Maybe it'll be better to use another logger later.
     private Logger logger = Logger.getLogger(EasyJdbc.class.getName());
 
     private final ConnectionManager connectionManager;
@@ -66,16 +67,24 @@ public final class EasyJdbcImpl implements EasyJdbc {
     }
 
     @Override
-    public <T> Optional<T> queryScalar(String sql, Class<T> type, Object... params) {
+    public <T> Optional<T> queryResult(String sql, ResultMapper<T> mapper, Object... params) {
+        if (mapper == null)
+            throw new IllegalArgumentException("RowMapper cannot be null.");
+
         return exec((con, st, rs) -> {
             st = prepareStatement(con, sql, params);
             rs = st.executeQuery();
-
-            if (rs.next())
-                return Optional.of(type.cast(rs.getObject(1)));
-
-            return Optional.empty();
+            return mapper.map(rs);
         });
+    }
+
+    @Override
+    public <T> Optional<T> queryScalar(String sql, Class<T> type, Object... params) {
+        return queryResult(sql, rs -> {
+            if(rs.next())
+                return Optional.of(type.cast(rs.getObject(1)));
+            return Optional.empty();
+        }, params);
     }
 
     @Override
@@ -83,26 +92,18 @@ public final class EasyJdbcImpl implements EasyJdbc {
         if (mapper == null)
             throw new IllegalArgumentException("RowMapper cannot be null.");
 
-        return exec((con, st, rs) -> {
-            st = prepareStatement(con, sql, params);
-            rs = st.executeQuery();
-
-            if (rs.next())
+        return queryResult(sql, rs -> {
+            if(rs.next())
                 return Optional.of(mapper.map(rs, 0));
-
             return Optional.empty();
-        });
+        }, params);
     }
 
     @Override
     public List<Map<String, Object>> queryAssoc(String sql, Object... params) {
 
-        return exec((con, st, rs) -> {
+        return queryResult(sql, rs -> {
             List<Map<String, Object>> result = new ArrayList<>();
-
-            st = prepareStatement(con, sql, params);
-
-            rs = st.executeQuery();
             ResultSetMetaData metaData = rs.getMetaData();
 
             while (rs.next()) {
@@ -115,8 +116,8 @@ public final class EasyJdbcImpl implements EasyJdbc {
                 result.add(record);
             }
 
-            return result;
-        });
+            return Optional.of(result);
+        }, params).get();
     }
 
     @Override
@@ -124,18 +125,16 @@ public final class EasyJdbcImpl implements EasyJdbc {
         if (mapper == null)
             throw new IllegalArgumentException("RowMapper cannot be null.");
 
-        return exec((con, st, rs) -> {
+        return queryResult(sql, rs -> {
             List<T> result = new ArrayList<>();
-            st = prepareStatement(con, sql, params);
-
-            rs = st.executeQuery();
 
             int rowNum = 0;
             while (rs.next())
                 result.add(mapper.map(rs, rowNum++));
+            return Optional.of(result);
 
-            return result;
-        });
+        }, params).get();
+
     }
 
     @Override

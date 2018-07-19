@@ -25,6 +25,7 @@ package org.bobachenko.easyjdbc.mapper;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Optional;
 
 /**
  *
@@ -32,5 +33,5 @@ import java.sql.SQLException;
  */
 @FunctionalInterface
 public interface ResultMapper<T> {
-    T map(ResultSet resultSet) throws SQLException;
+    Optional<T> map(ResultSet resultSet) throws SQLException;
 }

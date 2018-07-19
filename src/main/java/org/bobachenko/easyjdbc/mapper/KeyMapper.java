@@ -31,5 +31,6 @@ import java.sql.SQLException;
  * @author Maxim Bobachenko
  */
 @FunctionalInterface
-public interface KeyMapper<T> extends ResultMapper<T> {
+public interface KeyMapper<T>  {
+    T map(ResultSet resultSet) throws SQLException;
 }

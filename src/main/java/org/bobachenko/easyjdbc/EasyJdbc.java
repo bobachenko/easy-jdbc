@@ -23,6 +23,7 @@ Copyright (c) 2018 Maxim Bobachenko Contacts: <max@bobachenko.org>
 package org.bobachenko.easyjdbc;
 
 import org.bobachenko.easyjdbc.mapper.KeyMapper;
+import org.bobachenko.easyjdbc.mapper.ResultMapper;
 import org.bobachenko.easyjdbc.mapper.RowMapper;
 
 import javax.sql.DataSource;
@@ -37,6 +38,7 @@ import java.util.Optional;
  * @author Maxim Bobachenko
  */
 public interface EasyJdbc {
+    <T> Optional<T> queryResult(String sql, ResultMapper<T> mapper, Object... params);
     <T> Optional<T> queryScalar(String sql, Class<T> typeOfReturnValue, Object... params);
     <T> Optional<T> queryObject(String sql, RowMapper<T> mapper, Object... params);
     List<Map<String, Object>> queryAssoc(String sql, Object... params);
