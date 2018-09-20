@@ -31,6 +31,7 @@ import java.sql.SQLException;
 
 /**
  * Connection manager with support of transactions.
+ * @author Maxim Bobachenko
  */
 class TransactionalConnectionManager implements ConnectionManager {
 
@@ -56,8 +57,8 @@ class TransactionalConnectionManager implements ConnectionManager {
             if (isolationLevel != IsolationLevel.Default) {
                 DatabaseMetaData metaData = connection.getMetaData();
 
-                if (metaData.supportsTransactionIsolationLevel(isolationLevel.getJdbcValue())) {
-                    connection.setTransactionIsolation(isolationLevel.getJdbcValue());
+                if (metaData.supportsTransactionIsolationLevel(isolationLevel.getJdbcLevel())) {
+                    connection.setTransactionIsolation(isolationLevel.getJdbcLevel());
                 } else {
                     throw new EasySqlException(String.format("Isolation level %s isn't supported!", isolationLevel.toString()), null);
                 }

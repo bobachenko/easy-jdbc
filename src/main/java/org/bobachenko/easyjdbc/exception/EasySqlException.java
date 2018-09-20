@@ -24,7 +24,12 @@ Copyright (c) 2018 Maxim Bobachenko  Contacts: <max@bobachenko.org>
 package org.bobachenko.easyjdbc.exception;
 
 /**
- * Unchecked wrapper for checked SqlException
+ * <p>Unchecked wrapper for the checked SqlException.</p>
+ *
+ * It has original {@code SqlException} object as a cause.
+ * Call {@code getCause} method to get original object of {@code SqlException}
+ *
+ * @see #getCause()
  *
  * @author Maxim Bobachenko
  */

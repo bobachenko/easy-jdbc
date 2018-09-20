@@ -27,10 +27,24 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
+ * An interface used by {@code EasyJdbc} for mapping row(s) of a
+ * {@code ResultSet} to an object that represents a row of data.
  *
  * @author Maxim Bobachenko
  */
 @FunctionalInterface
 public interface RowMapper<T> {
+
+    /**
+     * <p>Implement this method to map each (or single) row of a ResultSet.</p>
+     *
+     * Don't call {@code ResultSet.next()} method manually. It's called by {@code EasyJdbc}.
+     *
+     * @param rsultSet the ResultSet to map
+     * @param rowNuber the number of the row
+     * @return the result object for the row
+     * @throws SQLException if it's happens e.g. during getting column values.     *
+     * Don't catch this exception, because it'll be caught by {@code EasyJdbc}
+     */
     T map(ResultSet rsultSet, int rowNuber) throws SQLException;
 }

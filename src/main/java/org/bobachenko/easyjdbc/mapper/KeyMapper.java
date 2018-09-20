@@ -27,10 +27,20 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
+ * {@code KeyMapper} is an interface used by {@code EasyJdbc} for mapping
+ * a value of a composite primary key to a result object.
  *
  * @author Maxim Bobachenko
  */
 @FunctionalInterface
 public interface KeyMapper<T>  {
+    /**
+     * Implement this method to map a value of a primary key.
+     *
+     * @param resultSet the ResultSet to map. It has data of the primary key.
+     * @return the result object for the primary key
+     * @throws SQLException if it's happens e.g. during getting column values.
+     * Don't catch this exception, because it'll be caught by {@code EasyJdbc}
+     */
     T map(ResultSet resultSet) throws SQLException;
 }

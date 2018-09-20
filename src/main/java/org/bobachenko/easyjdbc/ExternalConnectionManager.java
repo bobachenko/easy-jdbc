@@ -29,6 +29,7 @@ import java.sql.SQLException;
 
 /**
  * Connection manager for external connection
+ * @author Maxim Bobachenko
  */
 class ExternalConnectionManager implements ConnectionManager {
 

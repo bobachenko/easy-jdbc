@@ -42,7 +42,7 @@ import java.util.logging.Logger;
  */
 public final class EasyJdbcImpl implements EasyJdbc {
 
-    //TODO Maybe it'll be better to use another logger later.
+    //TODO Maybe it would be better to use another logger.
     private Logger logger = Logger.getLogger(EasyJdbc.class.getName());
 
     private final ConnectionManager connectionManager;
@@ -66,6 +66,13 @@ public final class EasyJdbcImpl implements EasyJdbc {
         }
     }
 
+    /**
+     * Executes a common jdbc operation.
+     * @param sql a query to execute
+     * @param mapper class or lambda to map a result of query
+     * @param params parameters for the query with correspondent types, if it's needed
+     * @return Optional with user's object inside. It depends on implementation of the mapper.
+     */
     @Override
     public <T> Optional<T> queryResult(String sql, ResultMapper<T> mapper, Object... params) {
         if (mapper == null)
@@ -78,15 +85,30 @@ public final class EasyJdbcImpl implements EasyJdbc {
         });
     }
 
+    /**
+     * Executes a query and returns scalar value with a given type.
+     * @param sql a query with one field. If field isn't one this method returns first field.
+     * @param typeOfReturnValue Type to cast.
+     *                          ClassCastException is possible if types of filed and this parameter are not appropriate.
+     * @param params parameters for the query in it's needed
+     * @return value if it exists
+     */
     @Override
-    public <T> Optional<T> queryScalar(String sql, Class<T> type, Object... params) {
+    public <T> Optional<T> queryScalar(String sql, Class<T> typeOfReturnValue, Object... params) {
         return queryResult(sql, rs -> {
             if(rs.next())
-                return Optional.of(type.cast(rs.getObject(1)));
+                return Optional.of(typeOfReturnValue.cast(rs.getObject(1)));
             return Optional.empty();
         }, params);
     }
 
+    /**
+     * Executes a query and creates an object that has a data of the single row of the result.
+     * @param sql a query to execute
+     * @param mapper class or lambda to map a result of query
+     * @param params  parameters for the query with correspondent types, if it's needed
+     * @return Optional with user's object inside. It depends on implementation of the mapper.
+     */
     @Override
     public <T> Optional<T> queryObject(String sql, RowMapper<T> mapper, Object... params) {
         if (mapper == null)
@@ -99,6 +121,12 @@ public final class EasyJdbcImpl implements EasyJdbc {
         }, params);
     }
 
+    /**
+     * Executes a query and creates a list of maps that have a data of all rows of the result.
+     * Every map in the list contains string keys with the names like columns before keyword FROM in the query.
+     * @param sql a query to execute
+     * @param params parameters for the query with correspondent types, if it's needed
+     */
     @Override
     public List<Map<String, Object>> queryAssoc(String sql, Object... params) {
 
@@ -120,6 +148,12 @@ public final class EasyJdbcImpl implements EasyJdbc {
         }, params).get();
     }
 
+    /**
+     * Executes a query and creates a list of object that have a data of all rows of the result.
+     * @param sql a query to execute
+     * @param mapper class or lambda to map a result of query. It's called for every rows in ResultSet
+     * @param params parameters for the query with correspondent types, if it's needed
+     */
     @Override
     public <T> List<T> queryList(String sql, RowMapper<T> mapper, Object... params) {
         if (mapper == null)
@@ -137,6 +171,28 @@ public final class EasyJdbcImpl implements EasyJdbc {
 
     }
 
+    /**
+     * Creates a new row by "INSERT" statement and returns value of a primary key
+     * @param sql a query with the INSERT keyword to execute
+     * @param typeOfNotCompositePrimaryKey type of primary key
+     * @param params parameters for the query for insert
+     * @return value of primary key
+     */
+    @Override
+    public <T> Optional<T> create(String sql, Class<T> typeOfNotCompositePrimaryKey, Object... params) {
+        KeyMapper<T> compositeKeyMapper = null;
+        if (typeOfNotCompositePrimaryKey != null)
+            compositeKeyMapper = rs -> typeOfNotCompositePrimaryKey.cast(rs.getObject(1));
+        return create(sql, compositeKeyMapper, params);
+    }
+
+    /**
+     * Creates a new row by "INSERT" statement and returns an object that contains the data of the composite primary key
+     * @param sql a query with the INSERT keyword to execute
+     * @param compositeKeyMapper class or lambda to map the value of the composite key
+     * @param params parameters for the query for insert
+     * @return object that contains a data of the composite primary key
+     */
     @Override
     public <T> Optional<T> create(String sql, KeyMapper<T> compositeKeyMapper, Object... params) {
         return exec((con, st, rs) -> {
@@ -158,15 +214,12 @@ public final class EasyJdbcImpl implements EasyJdbc {
         });
     }
 
-    @Override
-    public <T> Optional<T> create(String sql, Class<T> typeOfNotCompositePrimaryKey, Object... params) {
-        KeyMapper<T> compositeKeyMapper = null;
-        if (typeOfNotCompositePrimaryKey != null)
-            compositeKeyMapper = rs -> typeOfNotCompositePrimaryKey.cast(rs.getObject(1));
-        return create(sql, compositeKeyMapper, params);
-    }
-
-
+    /**
+     * Executes a query to modify the data by the "UPDATE" or "DELETE" keywords.
+     * @param sql a query to execute
+     * @param params parameters for the query
+     * @return the number of rows affected
+     */
     @Override
     public int update(String sql, Object... params) {
         return exec((con, st, rs) -> {

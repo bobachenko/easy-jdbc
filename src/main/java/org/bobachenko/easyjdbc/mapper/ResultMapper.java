@@ -28,10 +28,20 @@ import java.sql.SQLException;
 import java.util.Optional;
 
 /**
+ * {@code ResultMapper} is an interface to map a result of sql operation to a java object.
  *
  * @author Maxim Bobachenko
  */
 @FunctionalInterface
 public interface ResultMapper<T> {
+    /**
+     * <p>Implement this method to map whole ResultSet.</p>
+     *
+     * You have to call {@code ResultSet.next()} method manually for get and return the data as you want.
+     *
+     * @param resultSet the ResultSet to map
+     * @return the result object for the ResultSet
+     * @throws SQLException
+     */
     Optional<T> map(ResultSet resultSet) throws SQLException;
 }

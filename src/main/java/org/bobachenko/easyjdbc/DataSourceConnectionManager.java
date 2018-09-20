@@ -29,6 +29,7 @@ import java.sql.SQLException;
 /**
  * Connection manager for data source.
  * It keeps connections as thread local for multithreading access.
+ * @author Maxim Bobachenko
  */
 class DataSourceConnectionManager implements ConnectionManager {
 
@@ -40,7 +41,7 @@ class DataSourceConnectionManager implements ConnectionManager {
     }
 
     /**
-     * Get connection from datasource and store it to map.
+     * Get connection from datasource and store it to thread-local variable.
      */
     @Override
     public Connection getConnection() throws SQLException {

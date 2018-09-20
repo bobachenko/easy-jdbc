@@ -26,14 +26,38 @@ package org.bobachenko.easyjdbc;
 import javax.sql.DataSource;
 import java.util.function.Consumer;
 
+/**
+ * Transactions support
+ * Use one object for one transaction, therefore call method of() for each transaction
+ * @author Maxim Bobachenko
+ */
 public interface EasyTransaction {
+
+    /**
+     * Run the current transaction
+     * @param transactionConsumer a consumer that has a EasyJdbc object to use it for execute your queries
+     * @return
+     */
     EasyTransaction run(Consumer<EasyJdbc> transactionConsumer);
+
+    /**
+     * Commit the current transaction
+     */
     void commit();
 
+    /**
+     * Factory method to create instance of transaction
+     * @param dataSource instance of DataSource class
+     */
     static EasyTransaction of(DataSource dataSource) {
         return new EasyTransactionImpl(new TransactionalConnectionManager(dataSource));
     }
 
+    /**
+     * Factory method to create instance of transaction
+     * @param dataSource instance of DataSource class
+     * @param isolationLevel isolation level
+     */
     static EasyTransaction of(DataSource dataSource, IsolationLevel isolationLevel) {
         return new EasyTransactionImpl(new TransactionalConnectionManager(dataSource, isolationLevel));
     }

@@ -26,6 +26,7 @@ import java.sql.Connection;
 
 /**
  * Isolation levels
+ * @author Maxim Bobachenko
  */
 public enum IsolationLevel {
 
@@ -36,13 +37,13 @@ public enum IsolationLevel {
     RepeatableRead(Connection.TRANSACTION_REPEATABLE_READ),
     Serializable(Connection.TRANSACTION_SERIALIZABLE);
 
-    private int jdbcValue;
+    private int jdbcLevel;
 
     IsolationLevel(int value) {
-        this.jdbcValue = value;
+        jdbcLevel = value;
     }
 
-    public int getJdbcValue() {
-        return jdbcValue;
+    public int getJdbcLevel() {
+        return jdbcLevel;
     }
 }

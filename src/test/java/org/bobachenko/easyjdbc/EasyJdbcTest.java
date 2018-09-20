@@ -26,6 +26,7 @@ package org.bobachenko.easyjdbc;
 import org.bobachenko.easyjdbc.datasource.EasyDataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+
 import javax.sql.DataSource;
 import java.sql.*;
 import java.util.Date;
@@ -36,7 +37,7 @@ import java.util.Date;
 public class EasyJdbcTest {
     /*
                 simple model
-            */
+     */
     static class Person {
         int id;
         String name;
@@ -82,7 +83,7 @@ public class EasyJdbcTest {
     static EasyJdbc jdbc;
 
     @BeforeAll
-    protected  static void init() throws SQLException {
+    protected static void init() throws SQLException {
         dataSource = EasyDataSource.of(DB_DRIVER, DB_CONNECTION, DB_USER, DB_PASSWORD);
 
         Connection connection = dataSource.getConnection();

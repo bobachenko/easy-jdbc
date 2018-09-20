@@ -23,16 +23,16 @@ Copyright (c) 2018 Maxim Bobachenko  Contacts: <max@bobachenko.org>
 
 package org.bobachenko.easyjdbc;
 
-import org.bobachenko.easyjdbc.exception.EasySqlException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
+import org.bobachenko.easyjdbc.exception.EasySqlException;
+
 import java.util.*;
 
 class EasyTransactionTest extends EasyJdbcTest {
-
 
     @BeforeEach
     @Override
@@ -41,10 +41,10 @@ class EasyTransactionTest extends EasyJdbcTest {
     }
 
     @Test
-    void run_thenOk() {
+    void run_thenSuccess() {
         int[] id = {0};
 
-        EasyTransaction.of(dataSource, IsolationLevel.Serializable).run(jdbc -> {
+        EasyTransaction.of(dataSource, IsolationLevel.Default).run(jdbc -> {
 
             Optional<Integer> oId =
                     jdbc.create("INSERT INTO PERSON (name, birthday, salary, lastLogin) " +
@@ -64,7 +64,7 @@ class EasyTransactionTest extends EasyJdbcTest {
     }
 
     @Test
-    void run_thenNotOk() {
+    void run_thenFail() {
         int[] id = {0};
 
         Assertions.assertThrows(EasySqlException.class, () -> {

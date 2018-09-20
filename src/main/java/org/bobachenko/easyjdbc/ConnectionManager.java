@@ -27,6 +27,7 @@ import java.sql.SQLException;
 
 /**
  * Interface encapsulates real SqlConnection for connection management in different ways.
+ * @author Maxim Bobachenko
  */
 interface ConnectionManager {
     /**

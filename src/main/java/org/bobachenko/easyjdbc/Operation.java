@@ -27,7 +27,7 @@ import java.sql.*;
 
 /**
  * Represents operation that executed inside the typical jdbc boilerplate code
- * @param <T>
+ * @author Maxim Bobachenko
  */
 @FunctionalInterface
 interface Operation<T> {

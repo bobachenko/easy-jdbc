@@ -28,9 +28,11 @@ import java.sql.SQLException;
 import java.util.function.Consumer;
 
 /**
- * Class for transaction support
+ * Class for transactions support
+ * Use one object for one transaction, therefore call method of() for each transaction
+ * @author Maxim Bobachenko
  */
-public class EasyTransactionImpl implements EasyTransaction {
+public final class EasyTransactionImpl implements EasyTransaction {
 
     private TransactionalConnectionManager connectionManager;
 
@@ -38,6 +40,11 @@ public class EasyTransactionImpl implements EasyTransaction {
         this.connectionManager = connectionManager;
     }
 
+    /**
+     * Run the current transaction
+     * @param transactionConsumer a consumer that has a EasyJdbc object to use it for execute your queries
+     * @return
+     */
     @Override
     public EasyTransaction run(Consumer<EasyJdbc> transactionConsumer) {
 
@@ -53,6 +60,9 @@ public class EasyTransactionImpl implements EasyTransaction {
         return this;
     }
 
+    /**
+     * Commit the current transaction
+     */
     @Override
     public void commit() {
         try {
