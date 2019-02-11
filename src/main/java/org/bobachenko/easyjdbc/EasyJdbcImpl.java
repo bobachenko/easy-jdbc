@@ -245,7 +245,7 @@ public final class EasyJdbcImpl implements EasyJdbc {
         if (params != null) {
             int num = 0;
             for (Object param : params)
-                addParameter(++num, statement, param);
+                addParameter(connection, ++num, statement, param);
         }
         return statement;
     }
@@ -290,7 +290,7 @@ public final class EasyJdbcImpl implements EasyJdbc {
     /**
      * Add parameter to statement
      */
-    private void addParameter(int numberOfParam, PreparedStatement statement,
+    private void addParameter(Connection con, int numberOfParam, PreparedStatement statement,
                               Object paramValue) throws SQLException {
 
         // cast java types to JDBC types
@@ -332,6 +332,11 @@ public final class EasyJdbcImpl implements EasyJdbc {
             return;
         } else if (paramValue instanceof BigDecimal) {
             statement.setBigDecimal(numberOfParam, (BigDecimal) paramValue);
+            return;
+        } else if (paramValue instanceof Array) {
+            Array a = (Array) paramValue;
+            java.sql.Array sqlArray = con.createArrayOf(a.getDbDatatype(), a.getValues());
+            statement.setArray(numberOfParam, sqlArray);
             return;
         }
 

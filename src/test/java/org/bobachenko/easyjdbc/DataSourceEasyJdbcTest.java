@@ -25,6 +25,7 @@ package org.bobachenko.easyjdbc;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
@@ -161,5 +162,14 @@ class DataSourceEasyJdbcTest extends EasyJdbcTest {
                 Person::map, key.orElse(0));
 
         Assertions.assertTrue(person.isPresent() && person.get().name.equals(""));
+    }
+
+    // It doesn't work for H2 database
+    @Disabled
+    @Test
+    void queryListWithArrayParameter() {
+        Array<Integer> arrayParameter = Array.<Integer>of("VARCHAR").add(3).add(2);
+        List<Person> list = jdbc.queryList("SELECT * FROM PERSON WHERE id IN (?)", Person::map, arrayParameter);
+        Assertions.assertEquals(list.size(), 2);
     }
 }

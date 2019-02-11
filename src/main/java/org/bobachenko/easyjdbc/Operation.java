@@ -26,7 +26,7 @@ package org.bobachenko.easyjdbc;
 import java.sql.*;
 
 /**
- * Represents operation that executed inside the typical jdbc boilerplate code
+ * Represents operation that executing inside the typical jdbc boilerplate code
  * @author Maxim Bobachenko
  */
 @FunctionalInterface
