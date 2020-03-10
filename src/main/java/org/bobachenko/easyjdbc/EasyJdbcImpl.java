@@ -96,8 +96,10 @@ public final class EasyJdbcImpl implements EasyJdbc {
     @Override
     public <T> Optional<T> queryScalar(String sql, Class<T> typeOfReturnValue, Object... params) {
         return queryResult(sql, rs -> {
-            if(rs.next())
-                return Optional.of(typeOfReturnValue.cast(rs.getObject(1)));
+            if(rs.next()) {
+            	if(rs.getObject(1)!=null)
+                	return Optional.of(typeOfReturnValue.cast(rs.getObject(1)));
+            }
             return Optional.empty();
         }, params);
     }
